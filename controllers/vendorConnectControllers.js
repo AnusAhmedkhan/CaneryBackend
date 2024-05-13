@@ -18,13 +18,11 @@ const create = async (req, res) => {
     });
 
     console.log("Stripe account created:", accounts);
-    console.log("Stripe account link created:", accountLink);
 
-    // Redirect the vendor to the Stripe account onboarding flow
-    // res.redirect(accountLink.url);
+    res.status(200).json({ accountId: accounts.id, url: accountLink.url });
   } catch (error) {
     console.error("Error creating Stripe account:", error);
-    // Send error response
+
     res.status(500).json({
       success: false,
       message: "Error creating Stripe account",
@@ -33,22 +31,24 @@ const create = async (req, res) => {
   }
 };
 const get = async (req, res) => {
-  const account = await stripe.accounts.retrieve("acct_1PEegdRkzWdWYv5p");
+  const { accountId } = req.body;
+  const account = await stripe.accounts.retrieve(accountId);
   res.status(200).json({ message: account });
   console.log(account, "account");
 };
 
 const sentMoney = async (req, res) => {
+  const { accountId, amount } = req.body;
   try {
     const transfer = await stripe.transfers.create({
-      amount: 100,
+      amount: amount,
       currency: "usd",
-      destination: "acct_1PEegdRkzWdWYv5p",
+      destination: accountId,
     });
     console.log(transfer, "payout");
-    res.send(transfer);
+    res.status(200).json({ message: transfer });
   } catch (error) {
-    res.status(400).send(error.message);
+    res.status(400).json({ message: error.message });
   }
 };
 module.exports = { create, get, sentMoney };

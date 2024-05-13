@@ -6,6 +6,6 @@ const {
 } = require("../controllers/vendorConnectControllers");
 const router = express.Router();
 router.post("/createAccount", create);
-router.get("/get", get);
+router.get("/getAccount", get);
 router.get("/sendMoney", sentMoney);
 module.exports = router;
