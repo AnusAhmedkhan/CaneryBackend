@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const https = require("https");
 const cors = require("cors");
+const fs = require("fs");
 const vendor = require("./routes/vendorConnectRoutes");
 const port = 5000;
 var corsOptions = {
