@@ -3,6 +3,9 @@ const stripe = require("stripe")(
 );
 const create = async (req, res) => {
   const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "email is required" });
+  }
   try {
     const accounts = await stripe.accounts.create({
       type: "express", // Use 'express' type for simplicity
@@ -32,6 +35,9 @@ const create = async (req, res) => {
 };
 const updateAccount = async (req, res) => {
   const { accountId } = req.body;
+  if (!accountId) {
+    return res.status(400).json({ message: "Account ID is required" });
+  }
   try {
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
@@ -39,8 +45,6 @@ const updateAccount = async (req, res) => {
       return_url: "https://example.com/return",
       type: "account_onboarding",
     });
-
-    console.log("Stripe account created:", accounts);
 
     res.status(200).json({ url: accountLink.url });
   } catch (error) {
@@ -55,10 +59,43 @@ const updateAccount = async (req, res) => {
 };
 
 const get = async (req, res) => {
-  const { accountId } = req.body;
-  const account = await stripe.accounts.retrieve(accountId);
-  res.status(200).json({ message: account });
-  console.log(account, "account");
+  try {
+    // Validate the input
+    const { accountId } = req.body;
+    if (!accountId) {
+      return res.status(400).json({ message: "Account ID is required" });
+    }
+
+    // Retrieve the Stripe account
+    const account = await stripe.accounts.retrieve(accountId);
+
+    // Check if the account is verified
+    const isVerified = account.charges_enabled && account.payouts_enabled;
+
+    // Return the account information with verification status
+    res.status(200).json({
+      message: "Account retrieved successfully",
+
+      verificationStatus: isVerified
+        ? "Account is verified"
+        : "Account is not verified",
+    });
+  } catch (error) {
+    console.error("Error retrieving account:", error);
+
+    // Handle Stripe errors
+    if (error.type === "StripeInvalidRequestError") {
+      return res.status(400).json({
+        message: "Invalid request to Stripe API",
+        details: error.message,
+      });
+    }
+
+    // Handle other possible errors
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", details: error.message });
+  }
 };
 
 const sentMoney = async (req, res) => {
