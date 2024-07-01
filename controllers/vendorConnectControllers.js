@@ -106,14 +106,19 @@ const sentMoney = async (req, res) => {
       currency: "usd",
       destination: accountId,
     });
-    const payout = await stripe.payouts.create({
-      amount: amount * 100,
-      currency: "usd",
-      destination: accountId,
-    });
-    console.log(transfer, "payout");
+    const payout = await stripe.payouts.create(
+      {
+        amount: amount,
+        currency: "usd",
+      },
+      {
+        stripeAccount: accountId,
+      }
+    );
+    console.log(transfer, payout, "payout");
     res.status(200).json({ message: "Sent Succes" });
   } catch (error) {
+    console.log(error);
     res.status(400).json({ message: error.message });
   }
 };
